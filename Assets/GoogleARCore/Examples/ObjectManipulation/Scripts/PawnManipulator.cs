@@ -23,7 +23,9 @@ namespace GoogleARCore.Examples.ObjectManipulation
     using GoogleARCore;
     using UnityEngine;
     using UnityEngine.UI;
- 
+    using UnityEngine.EventSystems;
+    using System.Collections.Generic;
+
     /// <summary>
     /// Controls the placement of objects via a tap gesture.
     /// </summary>
@@ -48,8 +50,8 @@ namespace GoogleARCore.Examples.ObjectManipulation
         public GameObject ManipulatorPrefab;
         public GameObject manipulator;
 
-        public GameObject gameObject1;
-        public GameObject gameObject2;
+        private GameObject gameObject1;
+        private GameObject gameObject2;
 
         bool active;
 
@@ -79,6 +81,16 @@ namespace GoogleARCore.Examples.ObjectManipulation
             return false;
         }
 
+        private bool IsPointerOverUIObject()
+        {
+            PointerEventData eventDatacurrentPosition = new PointerEventData(EventSystem.current);
+            eventDatacurrentPosition.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+            List<RaycastResult> results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventDatacurrentPosition, results);
+            return results.Count > 0;
+        }
+
+
         /// <summary>
         /// Function called when the manipulation is ended.
         /// </summary>
@@ -104,60 +116,68 @@ namespace GoogleARCore.Examples.ObjectManipulation
             if (Frame.Raycast(
                 gesture.StartPosition.x, gesture.StartPosition.y, raycastFilter, out hit))
             {
-                // Use hit pose and camera pose to check if hittest is from the
-                // back of the plane, if it is, no need to create the anchor.
-                if ((hit.Trackable is DetectedPlane) &&
-                    Vector3.Dot(FirstPersonCamera.transform.position - hit.Pose.position,
-                        hit.Pose.rotation * Vector3.up) < 0)
+                if (!IsPointerOverUIObject())
                 {
-                    Debug.Log("Hit at back of the current DetectedPlane");
-                }
-                else
-                {
-                    if (!spawned)
+                    // Use hit pose and camera pose to check if hittest is from the
+                    // back of the plane, if it is, no need to create the anchor.
+                    if ((hit.Trackable is DetectedPlane) &&
+                        Vector3.Dot(FirstPersonCamera.transform.position - hit.Pose.position,
+                            hit.Pose.rotation * Vector3.up) < 0)
                     {
-                        // Instantiate game object at the hit pose.
-                        gameObject1 = Instantiate(PawnPrefab1, hit.Pose.position, hit.Pose.rotation);
-                        gameObject2 = Instantiate(PawnPrefab2, hit.Pose.position, hit.Pose.rotation);
-                        gameObject2.SetActive(false);
-
-                        active = true;
-                        // Instantiate manipulator.
-                        manipulator = Instantiate(ManipulatorPrefab, hit.Pose.position, hit.Pose.rotation);
-
-                        // Make game object a child of the manipulator.
-                        gameObject1.transform.parent = manipulator.transform;
-                        gameObject2.transform.parent = manipulator.transform;
-
-                        // Create an anchor to allow ARCore to track the hitpoint as understanding of
-                        // the physical world evolves.
-                        var anchor = hit.Trackable.CreateAnchor(hit.Pose);
-
-                        // Make manipulator a child of the anchor.
-                        manipulator.transform.parent = anchor.transform;
-
-                        // Select the placed object.
-                        manipulator.GetComponent<Manipulator>().Select();
-                        spawned = true;
+                        Debug.Log("Hit at back of the current DetectedPlane");
                     }
                     else
                     {
-                        gameObject1.transform.position = hit.Pose.position;
-                        gameObject2.transform.position = hit.Pose.position;
+                        if (!spawned)
+                        {
+                            // Instantiate game object at the hit pose.
+                            gameObject1 = Instantiate(PawnPrefab1, hit.Pose.position, hit.Pose.rotation);
+                            gameObject2 = Instantiate(PawnPrefab2, hit.Pose.position, hit.Pose.rotation);
+                          
 
-                        m_Oject1Button.onClick.AddListener(() => {
-                            if (active) {
-                                gameObject1.SetActive(true);
-                                gameObject2.SetActive(false);
-                                active = false;
-                            } });
+                            active = true;
+                            // Instantiate manipulator.
+                            manipulator = Instantiate(ManipulatorPrefab, hit.Pose.position, hit.Pose.rotation);
 
-                       m_Object2Button.onClick.AddListener(() => {
-                            if (!active) {
-                                gameObject2.SetActive(true);
-                                gameObject1.SetActive(false);
-                               active = true;
-                            } });
+                            // Make game object a child of the manipulator.
+                            gameObject1.transform.parent = manipulator.transform;
+                            gameObject2.transform.parent = manipulator.transform;
+
+                            // Create an anchor to allow ARCore to track the hitpoint as understanding of
+                            // the physical world evolves.
+                            var anchor = hit.Trackable.CreateAnchor(hit.Pose);
+
+                            // Make manipulator a child of the anchor.
+                            manipulator.transform.parent = anchor.transform;
+
+                            // Select the placed object.
+                            manipulator.GetComponent<Manipulator>().Select();
+                            spawned = true;
+                            gameObject2.SetActive(false);
+                        }
+                        else
+                        {
+                            gameObject1.transform.position = hit.Pose.position;
+                            gameObject2.transform.position = hit.Pose.position;
+
+                                m_Oject1Button.onClick.AddListener(() => {
+                                    if (!active)
+                                    {
+                                        gameObject1.SetActive(true);
+                                        gameObject2.SetActive(false);
+                                        active = true;
+                                    }
+                                });
+
+                                m_Object2Button.onClick.AddListener(() => {
+                                    if (active)
+                                    {
+                                        gameObject2.SetActive(true);
+                                        gameObject1.SetActive(false);
+                                        active = false;
+                                    }
+                                });
+                        }
                     }
                 }
             }

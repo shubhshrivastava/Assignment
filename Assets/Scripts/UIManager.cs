@@ -5,19 +5,13 @@ using UnityEngine.UI;
 using UnityEngine.Serialization;
 using UnityEngine.SceneManagement;
 using GoogleARCore.Examples.ObjectManipulation;
+using UnityEngine.EventSystems;
+
 public class UIManager : MonoBehaviour
 {
     [FormerlySerializedAs("m_backButton")]
     [SerializeField]
     public Button _backButton;
-
-    [FormerlySerializedAs("m_object1")]
-    [SerializeField]
-    public Button _object1;
-
-    [FormerlySerializedAs("m_object2")]
-    [SerializeField]
-    public Button _object2;
 
     int sceneIndex;
 
@@ -45,6 +39,15 @@ public class UIManager : MonoBehaviour
     {
          SceneManager.LoadScene(sceneIndex - 1);
     }
+    
 
+    private bool IsPointerOverUIObject()
+    {
+        PointerEventData eventDatacurrentPosition = new PointerEventData(EventSystem.current);
+        eventDatacurrentPosition.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventDatacurrentPosition, results);
+        return results.Count > 0;
+    }
   
 }
