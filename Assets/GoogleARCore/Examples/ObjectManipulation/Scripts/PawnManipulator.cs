@@ -22,6 +22,7 @@ namespace GoogleARCore.Examples.ObjectManipulation
 {
     using GoogleARCore;
     using UnityEngine;
+    using UnityEngine.UI;
  
     /// <summary>
     /// Controls the placement of objects via a tap gesture.
@@ -37,7 +38,8 @@ namespace GoogleARCore.Examples.ObjectManipulation
         /// <summary>
         /// A prefab to place when a raycast from a user touch hits a plane.
         /// </summary>
-        public GameObject PawnPrefab;
+        
+    
 
        
         /// <summary>
@@ -45,7 +47,23 @@ namespace GoogleARCore.Examples.ObjectManipulation
         /// </summary>
         public GameObject ManipulatorPrefab;
         public GameObject manipulator;
-        
+
+        public GameObject gameObject1;
+        public GameObject gameObject2;
+
+        bool active;
+
+        public GameObject PawnPrefab1; //cube
+        public GameObject PawnPrefab2; //sphere
+
+        public Button m_Oject1Button;
+        public Button m_Object2Button;
+
+
+        void Start()
+        {
+           
+        }
         /// <summary>
         /// Returns true if the manipulation can be started for the given gesture.
         /// </summary>
@@ -96,17 +114,20 @@ namespace GoogleARCore.Examples.ObjectManipulation
                 }
                 else
                 {
-                  if(!spawned)
+                    if (!spawned)
                     {
                         // Instantiate game object at the hit pose.
-                        var gameObject = Instantiate(PawnPrefab, hit.Pose.position, hit.Pose.rotation);
+                        gameObject1 = Instantiate(PawnPrefab1, hit.Pose.position, hit.Pose.rotation);
+                        gameObject2 = Instantiate(PawnPrefab2, hit.Pose.position, hit.Pose.rotation);
+                        gameObject2.SetActive(false);
 
-
+                        active = true;
                         // Instantiate manipulator.
                         manipulator = Instantiate(ManipulatorPrefab, hit.Pose.position, hit.Pose.rotation);
 
                         // Make game object a child of the manipulator.
-                        gameObject.transform.parent = manipulator.transform;
+                        gameObject1.transform.parent = manipulator.transform;
+                        gameObject2.transform.parent = manipulator.transform;
 
                         // Create an anchor to allow ARCore to track the hitpoint as understanding of
                         // the physical world evolves.
@@ -121,7 +142,22 @@ namespace GoogleARCore.Examples.ObjectManipulation
                     }
                     else
                     {
-                        gameObject.transform.position = hit.Pose.position;
+                        gameObject1.transform.position = hit.Pose.position;
+                        gameObject2.transform.position = hit.Pose.position;
+
+                        m_Oject1Button.onClick.AddListener(() => {
+                            if (active) {
+                                gameObject1.SetActive(true);
+                                gameObject2.SetActive(false);
+                                active = false;
+                            } });
+
+                       m_Object2Button.onClick.AddListener(() => {
+                            if (!active) {
+                                gameObject2.SetActive(true);
+                                gameObject1.SetActive(false);
+                               active = true;
+                            } });
                     }
                 }
             }
