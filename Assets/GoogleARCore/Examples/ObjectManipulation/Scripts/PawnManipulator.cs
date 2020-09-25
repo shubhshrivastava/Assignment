@@ -37,16 +37,12 @@ namespace GoogleARCore.Examples.ObjectManipulation
         /// </summary>
         public Camera FirstPersonCamera;
         bool spawned =false;
-        /// <summary>
-        /// A prefab to place when a raycast from a user touch hits a plane.
-        /// </summary>
-        
-    
 
-       
-        /// <summary>
-        /// Manipulator prefab to attach placed objects to.
-        /// </summary>
+        public Text objecttransform;
+        public Text manipulatortransform;
+        public Text manipulatorrotation;
+        public Text objectrotation;
+
         public GameObject ManipulatorPrefab;
         public GameObject manipulator;
 
@@ -58,14 +54,39 @@ namespace GoogleARCore.Examples.ObjectManipulation
         public GameObject PawnPrefab1; //cube
         public GameObject PawnPrefab2; //sphere
 
-        public Button m_Oject1Button;
+        public Button m_Object1Button;
         public Button m_Object2Button;
 
-
-        void Start()
+         void Start()
         {
-           
+            objecttransform = objecttransform.GetComponent<Text>();
+            manipulatortransform = manipulatortransform.GetComponent<Text>(); ;
         }
+        void Update()
+        {
+            m_Object1Button.onClick.AddListener(onbutton1clicked); 
+            m_Object2Button.onClick.AddListener(onbutton2clicked);
+            
+        }
+
+        //void OnDestroy()
+        //{
+        //    m_Object1Button.onClick.RemoveListener(onbutton1clicked); ; 
+        //    m_Object2Button.onClick.RemoveListener(onbutton2clicked);
+        //}
+
+        public void onbutton1clicked()
+        {
+                gameObject1.SetActive(true);
+                gameObject2.SetActive(false);
+        }
+
+        public void onbutton2clicked()
+        {
+                gameObject2.SetActive(true);
+                gameObject1.SetActive(false);
+        }
+
         /// <summary>
         /// Returns true if the manipulation can be started for the given gesture.
         /// </summary>
@@ -134,8 +155,6 @@ namespace GoogleARCore.Examples.ObjectManipulation
                             gameObject1 = Instantiate(PawnPrefab1, hit.Pose.position, hit.Pose.rotation);
                             gameObject2 = Instantiate(PawnPrefab2, hit.Pose.position, hit.Pose.rotation);
                           
-
-                            active = true;
                             // Instantiate manipulator.
                             manipulator = Instantiate(ManipulatorPrefab, hit.Pose.position, hit.Pose.rotation);
 
@@ -157,26 +176,30 @@ namespace GoogleARCore.Examples.ObjectManipulation
                         }
                         else
                         {
-                            gameObject1.transform.position = hit.Pose.position;
-                            gameObject2.transform.position = hit.Pose.position;
+                            if (gameObject1.activeInHierarchy)
+                            {
+                                gameObject1.transform.position = hit.Pose.position;
+                                gameObject1.transform.parent = manipulator.transform;
+                                manipulator.transform.position = new Vector3(gameObject2.transform.position.x, gameObject2.transform.position.y, gameObject2.transform.position.z);
+                                manipulator.transform.rotation = hit.Pose.rotation;
+                                objecttransform.text = "object transform is: " + gameObject1.transform.position.ToString();
+                                objectrotation.text = "object rotation is: " + gameObject1.transform.rotation.ToString();
+                                manipulatortransform.text = "manipulator transform is: "+manipulator.transform.position.ToString();
+                                manipulatorrotation.text = "manipulator rotation is: " + manipulator.transform.rotation.ToString();
+                            }
 
-                                m_Oject1Button.onClick.AddListener(() => {
-                                    if (!active)
-                                    {
-                                        gameObject1.SetActive(true);
-                                        gameObject2.SetActive(false);
-                                        active = true;
-                                    }
-                                });
-
-                                m_Object2Button.onClick.AddListener(() => {
-                                    if (active)
-                                    {
-                                        gameObject2.SetActive(true);
-                                        gameObject1.SetActive(false);
-                                        active = false;
-                                    }
-                                });
+                            if (gameObject2.activeInHierarchy)
+                            {
+                                gameObject2.transform.position = hit.Pose.position;
+                                gameObject2.transform.parent = manipulator.transform;
+                                manipulator.transform.position = new Vector3(gameObject2.transform.position.x, gameObject2.transform.position.y, gameObject2.transform.position.z);
+                                manipulator.transform.rotation = hit.Pose.rotation;
+                                objecttransform.text = "object transform is: "+ gameObject2.transform.position.ToString();
+                                objectrotation.text = "object rotation is: "+ gameObject2.transform.rotation.ToString();
+                                manipulatortransform.text = "manipulator transform is: "+manipulator.transform.position.ToString();
+                                manipulatorrotation.text = "manipulator rotation is: "+manipulator.transform.rotation.ToString();
+                            }
+                            
                         }
                     }
                 }
